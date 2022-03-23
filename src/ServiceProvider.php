@@ -24,10 +24,10 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             'vault',
             function ($app) {
                 return new Vault(
-                    config('vault.tenant_id'),
-                    config('vault.client_id'),
-                    config('vault.client_secret'),
-                    config('vault.vault')
+//                    config('vault.tenant_id'),
+//                    config('vault.client_id'),
+//                    config('vault.client_secret'),
+//                    config('vault.vault')
                 );
             }
         );
