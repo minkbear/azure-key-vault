@@ -85,4 +85,82 @@ class Vault
     {
         $this->vault = $vault ?? config('vault.vault');
     }
+
+    public static function certificate($name) {
+        $response = Http::withToken(self::authToken())
+            ->accept('application/json')
+            ->get(
+                self::vaultUrl() . "certificates/$name",
+                [
+                    "api-version" => "7.2"
+                ]
+            );
+
+        if ($response->successful()) {
+            $result = $response->json();
+
+            $cert = new Certificate(
+                $response['id'],
+                $response['cer'],
+                $response['attributes']['enabled'],
+                $response['attributes']['created'],
+                $response['attributes']['updated'],
+                $response['attributes']['exp']
+            );
+
+            return $cert;
+        } elseif ($response->status() == 404) {
+            return $default;
+        } else {
+            throw new AzureKeyVaultException(
+                $response->json()['error']['message'],
+                $response->status()
+            );
+        }
+    }
+
+    public static function uploadcert($name, $content_base64, $pwd) {
+        $response = Http::withToken(self::authToken())
+            ->accept('application/json')
+            ->post(
+                self::vaultUrl() . "certificates/$name/import?api-version=7.2",
+                [
+                    'value' => $content_base64,
+                    'pwd' => $pwd,
+                    'policy' => [
+                        'key_props' => [
+                            'exportable' => true,
+                            'kty' => 'RSA',
+                            'key_size' => 2048,
+                            'reuse_key' => false
+                        ],
+                        'secret_props' => [
+                            'contentType' => 'application/x-pkcs12'
+                        ]
+                    ]
+                ]
+            );
+
+        if ($response->successful()) {
+            $result = $response->json();
+
+//            $cert = new Certificate(
+//                $response['id'],
+//                $response['cer'],
+//                $response['attributes']['enabled'],
+//                $response['attributes']['created'],
+//                $response['attributes']['updated'],
+//                $response['attributes']['exp']
+//            );
+
+            return $result;
+        } elseif ($response->status() == 404) {
+            return $default;
+        } else {
+            throw new AzureKeyVaultException(
+                $response->json()['error']['message'],
+                $response->status()
+            );
+        }
+    }
 }
