@@ -163,4 +163,26 @@ class Vault
             );
         }
     }
+
+	public static function deletecert($name) {
+		$response = Http::withToken(self::authToken())
+			->accept('application/json')
+			->delete(
+				self::vaultUrl() . "certificates/$name?api-version=7.3",
+				[]
+			);
+
+		if ($response->successful()) {
+			$result = $response->json();
+
+			return true;
+		} elseif ($response->status() == 404) {
+			return false;
+		} else {
+			throw new AzureKeyVaultException(
+				$response->json()['error']['message'],
+				$response->status()
+			);
+		}
+	}
 }
