@@ -43,8 +43,16 @@ class Vault
                 'resource' => 'https://vault.azure.net',
                 'grant_type' => 'client_credentials',
             ]
-        )->json();
+        );
 
+	if (!$response->successful()) {
+            throw new AzureKeyVaultException(
+                $response->json()['error_description'],
+                $response->status()
+            );
+        }
+
+        $response = $response->json();
         $token = $response['access_token'];
         $expiry = now()->addSeconds((int)$response['expires_in']);
 
